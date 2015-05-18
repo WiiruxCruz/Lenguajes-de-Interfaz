@@ -1,0 +1,98 @@
+int pin0, pin1, pin2, pin3, pin4, pin5, pin6, pin7;
+// the setup function runs once when you press reset or power the board
+void setup() {
+  // initialize digital pin 13 as an output.
+  pinMode(0, OUTPUT);
+  pinMode(1, OUTPUT);
+  pinMode(2, OUTPUT);
+  pinMode(3, OUTPUT);
+  pinMode(4, OUTPUT);
+  pinMode(5, OUTPUT);
+  pinMode(6, OUTPUT);
+  pinMode(7, OUTPUT);
+}
+void apagarLEDS(){
+  int pinEnCurso=0;
+  while(pinEnCurso<8){
+    digitalWrite(pinEnCurso,LOW);
+    pinEnCurso++;
+  }
+}
+void encenderLEDS(){
+  if(pin0)
+    digitalWrite(0,HIGH);
+  if(pin1)
+    digitalWrite(1,HIGH);
+  if(pin2)
+    digitalWrite(2,HIGH);
+  if(pin3)
+    digitalWrite(3,HIGH);
+  if(pin4)
+    digitalWrite(4,HIGH);
+  if(pin5)
+    digitalWrite(5,HIGH);
+  if(pin6)
+    digitalWrite(6,HIGH);
+  if(pin7)
+    digitalWrite(7,HIGH);
+  delay(300);
+  apagarLEDS();
+}
+void PrepararLEDS(int aux){
+    if(aux/128!=0)
+      pin7=1;
+    else
+      pin7=0;
+    aux%=128;
+    if(aux/64!=0)
+      pin6=1;
+    else
+      pin6=0;
+    aux%=64;
+    if(aux/32!=0)
+      pin5=1;
+    else
+      pin5=0;
+    aux%=32;
+    if(aux/16!=0)
+      pin4=1;
+    else
+      pin4=0;
+    aux%=16;
+    if(aux/8!=0)
+      pin3=1;
+    else
+      pin3=0;
+    aux%=8;  
+    if(aux/4!=0)
+      pin2=1;
+    else
+      pin2=0;
+    aux%=4;
+    if(aux/2!=0)
+      pin1=1;
+    else
+      pin1=0;
+    aux%=2;
+    if(aux/1!=0)
+      pin0=1;
+    else
+      pin0=0;
+    encenderLEDS();  
+}
+void contar(int modo){
+  int i;
+  if(modo== -1)
+    for(i=0;i<256;i++){
+      int aux=i;
+      PrepararLEDS(aux);
+    }
+  else 
+    PrepararLEDS(modo);
+}
+// the loop function runs over and over again forever
+void loop() 
+{
+//if we introduce -1 the loop start from 0 to 255 display on the leds, else, we can apreciate the number introduced on the leds
+  contar(-1);
+}
