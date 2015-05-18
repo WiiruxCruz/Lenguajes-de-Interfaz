@@ -1,0 +1,12 @@
+int pinSalida=0;
+
+void setup() {
+  pinMode(pinSalida, OUTPUT);
+}
+
+void loop() {
+  digitalWrite(pinSalida, HIGH);   
+  delay(1000);              
+  digitalWrite(pinSalida, LOW);    
+  delay(1000);        
+}
