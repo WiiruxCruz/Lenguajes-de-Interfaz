@@ -1,0 +1,240 @@
+import javax.swing.*;
+
+public class Main {
+
+    public static void main(String[] args) {
+
+        JFrame f = new JFrame("Practica 11");
+        Panel p = new Panel();
+        f.setSize(800, 300);
+        f.setLocationRelativeTo(null);
+        f.setResizable(false);
+        f.setDefaultCloseOperation(3);
+        f.add(p);
+        java.awt.EventQueue.invokeLater(new Runnable() {
+            public void run() {
+                new Arduino(p);
+            }
+        });
+        f.setVisible(true);
+
+    }
+
+}
+
+
+import java.awt.*;
+import javax.swing.*;
+
+public class Panel extends JPanel {
+
+    private JLabel titulo;
+    private JLabel grados;
+    private JLabel bomba;
+    private JButton on;
+    private JProgressBar medidor;
+    private JLabel cero;
+    private JLabel cincuenta;
+    private JLabel imagen;
+    private final Font fuente = new Font("Century Gothic", Font.BOLD, 16);
+
+    public Panel() {
+        setBackground(Color.white);
+        addComponents();
+
+    }
+
+    public final void addComponents() {
+
+        JPanel principal = new JPanel(new BorderLayout());
+        principal.setBackground(Color.white);
+
+        JPanel principalOeste = new JPanel();
+        principalOeste.setBorder(BorderFactory.createEmptyBorder(0, 0, 0, 80));
+        principalOeste.setBackground(Color.white);
+
+        JPanel principalEste = new JPanel();
+        GridLayout gp = new GridLayout(3, 1);
+        principalEste.setLayout(gp);
+        principalEste.setBackground(Color.white);
+
+        JPanel norte = new JPanel();
+        GridLayout g1 = new GridLayout(3, 1);
+        norte.setLayout(g1);
+        g1.setVgap(20);
+        norte.setBackground(Color.white);
+        titulo = new JLabel("Medidor de temperatura", JLabel.CENTER);
+        titulo.setFont(fuente);
+
+        grados = new JLabel("Temperatura actual", JLabel.CENTER);
+        grados.setFont(fuente);
+        imagen = new JLabel();
+        imagen.setIcon(new ImageIcon(getClass().getResource("/imagen/Picture1.png")));
+        JPanel sur = new JPanel();
+        sur.setBackground(Color.white);
+        bomba = new JLabel("La bomba esta:    ");
+        bomba.setFont(fuente);
+        on = new JButton("Apagada");
+        on.setFont(fuente);
+
+        on.setBackground(Color.red);
+        on.setBorder(null);
+
+        JPanel central = new JPanel();
+        central.setBackground(Color.white);
+        GridLayout g2 = new GridLayout(1, 2);
+        central.setLayout(g2);
+        g2.setHgap(140);
+
+        medidor = new JProgressBar(0, 50);
+        medidor.setStringPainted(true);
+
+        cero = new JLabel("0 °C");
+        cero.setFont(fuente);
+        cincuenta = new JLabel("50 °C");
+        cincuenta.setFont(fuente);
+
+        norte.add(titulo);
+        norte.add(grados);
+
+        norte.add(medidor);
+
+        central.add(cero);
+        central.add(cincuenta);
+
+        sur.add(bomba);
+        sur.add(on);
+        principalOeste.add(imagen);
+        principalEste.add(norte, "North");
+        principalEste.add(central, "Center");
+        principalEste.add(sur, "South");
+
+        principal.add(principalEste, "East");
+        principal.add(principalOeste, "West");
+
+        add(principal);
+
+    }
+
+    public JButton getOn() {
+        return on;
+    }
+
+    public void setOn(JButton on) {
+        this.on = on;
+    }
+
+    public JProgressBar getMedidor() {
+        return medidor;
+    }
+
+    public void setMedidor(JProgressBar medidor) {
+        this.medidor = medidor;
+    }
+
+}
+
+
+import gnu.io.CommPortIdentifier;
+import gnu.io.NoSuchPortException;
+import gnu.io.PortInUseException;
+import gnu.io.SerialPort;
+import gnu.io.SerialPortEvent;
+import gnu.io.SerialPortEventListener;
+import gnu.io.UnsupportedCommOperationException;
+import java.awt.Color;
+import java.io.IOException;
+import java.io.InputStream;
+import java.text.DecimalFormat;
+import java.util.TooManyListenersException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
+public class Arduino implements SerialPortEventListener {
+
+    static float TEMPERATURALIMITE = 30;
+    private CommPortIdentifier portId = null;
+    private SerialPort port = null;
+    private InputStream input;
+    public Panel p;
+    public float a;
+
+    public Arduino(Panel p) {
+        this.p = p;
+
+        try {
+            abrirPorta();
+        } catch (NoSuchPortException ex) {
+            Logger.getLogger(Arduino.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (PortInUseException ex) {
+            Logger.getLogger(Arduino.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (UnsupportedCommOperationException ex) {
+            Logger.getLogger(Arduino.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (IOException ex) {
+            Logger.getLogger(Arduino.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (TooManyListenersException ex) {
+            Logger.getLogger(Arduino.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
+
+    private void abrirPorta() throws NoSuchPortException, PortInUseException,
+            UnsupportedCommOperationException, IOException, TooManyListenersException {
+        portId = CommPortIdentifier.getPortIdentifier("COM3");//NECESARIO PARA LA COMUNICACION EN COM
+        port = (SerialPort) portId.open(this.getClass().getName(), 1000);
+        port.setSerialPortParams(9600, SerialPort.DATABITS_8,
+                SerialPort.STOPBITS_1, SerialPort.PARITY_NONE);
+        input = port.getInputStream();
+        port.addEventListener((SerialPortEventListener) this);
+        port.notifyOnDataAvailable(true);
+    }
+
+    public synchronized void close() {
+        if (port != null) {
+            port.removeEventListener();
+            port.close();
+        }
+    }
+
+    public synchronized void serialEvent(SerialPortEvent oEvent) {
+
+        if (oEvent.getEventType() == SerialPortEvent.DATA_AVAILABLE) {
+            try {
+                String valor = "";
+                int aux = 0;
+                while (true) {    //Para leer numeros, metodo implementado por mi
+                    aux = input.read();
+                    if (aux == 67) //es C
+                    {
+                        break;
+                    } else if (aux == 46) //es Punto (.)
+                    {
+                        valor += ".";
+                    } else if (aux <= 57 && aux >= 48) //Contempla cualquier numero que no sea un número en código ascii
+                    {
+                        valor += aux - 48;
+                    }
+                }
+                a = Float.parseFloat(valor);
+
+                if (a >= TEMPERATURALIMITE) {
+
+                    p.getOn().setBackground(Color.green);
+                    p.getOn().setText("Prendida");
+                    p.getMedidor().setForeground(new java.awt.Color(141, 55, 216));
+                } else {
+                    p.getOn().setBackground(Color.red);
+                    p.getOn().setText("Apagada");
+                    p.getMedidor().setForeground(new java.awt.Color(77, 175, 249));
+                }
+
+                DecimalFormat decimal = new DecimalFormat("0.00");
+                p.getMedidor().setValue((int) a);
+                p.getMedidor().setString(String.valueOf(decimal.format(a)) + " °C");
+
+            } catch (Exception e) {
+                System.err.println(e.toString());
+            }
+        }
+    }
+
+}
