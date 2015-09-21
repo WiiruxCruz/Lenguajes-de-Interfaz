@@ -1,0 +1,30 @@
+#include <LiquidCrystal.h>
+LiquidCrystal lcd(12, 11, 5, 4, 3, 2);
+int pinAnalogoEntrada=0;
+int pinSalidaRojo=8;
+//int pinSalidaVerde=9;
+float temperatura;
+void setup() {
+  pinMode(pinSalidaRojo,OUTPUT);
+ // pinMode(pinSalidaVerde, OUTPUT);
+  lcd.begin(16, 2);
+  Serial.begin(9600);
+}
+void loop() {
+  lcd.setCursor(0,0);
+  temperatura = analogRead(pinAnalogoEntrada);
+  temperatura = 5.0*temperatura*100.0/1024.0;
+  lcd.print(temperatura);
+  lcd.print(" oC");
+  Serial.print(temperatura);
+  Serial.print(" oC");
+  if(temperatura>=34){
+  digitalWrite(pinSalidaRojo, HIGH);
+//  digitalWrite(pinSalidaVerde, HIGH);
+  }
+  else{
+//  digitalWrite(pinSalidaVerde,LOW);
+  digitalWrite(pinSalidaRojo,LOW);
+}
+delay(1000);
+}
